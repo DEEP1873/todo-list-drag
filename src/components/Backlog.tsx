@@ -1,69 +1,68 @@
 import React, { useState } from "react";
 import PopUpScreen from "./PopUpScreen";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "../redux/store";
+import { addTaskToBacklog, editBacklogTask } from "../redux/taskSlice";
 
-type Item = {
-  title: string;
-  description: string;
-};
-type props = {
-  // limit: number;
-  // setLimit: React.Dispatch<React.SetStateAction<number>>;
-  items: Item[];
-  setItems: React.Dispatch<React.SetStateAction<Item[]>>;
-};
-const Backlog: React.FC<props> = ({ items,setItems }) => {
-  // const [items, setItems] = useState<Item[]>([]);
+const Backlog = () => {
+  const dispatch = useDispatch();
+  const items = useSelector((state: RootState) => state.tasks.backlog);
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [Popupscreen, setPopUpScreen] = useState(false);
   const [editindex, setEditIndex] = useState<number | null>(null);
 
+  const openHandler = () => setPopUpScreen(true);
   const closeHandler = () => {
     setPopUpScreen(false);
-  };
-
-  const openHandler = () => {
-    setPopUpScreen(true);
-  };
-
-  const editHandler = (index: number) => {
-    const itemToEdit = items[index];
-    setTitle(itemToEdit.title);
-    setDescription(itemToEdit.description);
-    setEditIndex(index);
-    setPopUpScreen(true);
+    setEditIndex(null);
+    setTitle(" ");
+    setDescription("");
   };
 
   const AddHandler = () => {
-    if (title.trim() !== "" && description.trim() !== "" ) {
-      if (editindex !== null) {
-        const updatedItems = [...items];
-        updatedItems[editindex] = { title, description };
-        setItems(updatedItems);
-      } else {
-        const newTask = { title, description };
-        setItems([...items, newTask]);
-       
-      }
+    if (!title || !description) return;
 
-      setTitle("");
-      setDescription("");
-      setEditIndex(null);
-      setPopUpScreen(false);
+    if (editindex !== null) {
+      dispatch(
+        editBacklogTask({
+          index: editindex,
+          updatedTask: { id: items[editindex].id, title, description },
+        })
+      );
+    } else {
+      dispatch(addTaskToBacklog({ title, description }));
     }
+
+    closeHandler();
+  };
+
+  const EditHandler = (index: number) => {
+    setEditIndex(index);
+    setTitle(items[index].title);
+    setDescription(items[index].description);
+    openHandler();
   };
 
   return (
-    <div className="h-170 w-full  md:w-1/3 p-4 rounded-lg bg-amber-200">
-      <div className="flex justify-center my-3">
-        <button
-          className="border-2 w-20 h-10 rounded-lg"
-          onClick={openHandler}
-        >
-          +
-        </button>
+    <div className="h-full w-full bg-white p-2 rounded-lg shadow-xl border border-gray-200 flex flex-col">
+      {/* Sticky Header Section */}
+      <div className="sticky top-0 z-10 py-4 bg-white">
+        <div className="text-center mb-2">
+          <h2 className="text-2xl font-bold text-gray-800">Add Tasks</h2>
+        </div>
+        <div className="flex justify-center items-center my-2">
+          <button
+            className="w-16 h-16 rounded-full bg-green-500 text-white text-2xl flex items-center justify-center shadow-lg hover:bg-green-600"
+            onClick={openHandler}
+          >
+            +
+          </button>
+        </div>
       </div>
 
+      {/* Popup */}
       {Popupscreen && (
         <PopUpScreen
           title={title}
@@ -76,29 +75,30 @@ const Backlog: React.FC<props> = ({ items,setItems }) => {
         />
       )}
 
-      <div className="my-3  max-h-[70vh] overflow-y-auto">
+      {/* Scrollable Items Section */}
+      <div className="overflow-y-auto pr-2 ">
         {items.map((item, index) => (
           <div
             key={index}
-            className="p-4 bg-amber-300 rounded mb-2 shadow "
-            draggable={true}
-            onDragStart={(e) => {
+            className="p-2 mb-2 bg-yellow-100 border border-l-4 border-yellow-300 rounded-xl shadow-md transition hover:shadow-lg"
+            draggable
+            onDragStart={(e) =>
               e.dataTransfer.setData(
                 "text/plain",
                 JSON.stringify({ ...item, source: "backlog" })
-              );
-            }}
+              )
+            }
           >
-            <strong>Name: {item.title}</strong>
-            <p>Description: {item.description}</p>
-            <div className="flex flex-row-reverse">
-              <button
-                className="px-10 py-1 rounded-lg bg-red-600 text-black"
-                onClick={() => editHandler(index)}
-              >
-                Edit
-              </button>
-            </div>
+            <strong className="block text-lg font-semibold text-yellow-800">
+              Name: {item.title}
+            </strong>
+            <p className="text-yellow-700">{item.description}</p>
+            <button
+              onClick={() => EditHandler(index)}
+              className="mt-3 inline-block bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-1 rounded-full transition"
+            >
+              Edit
+            </button>
           </div>
         ))}
       </div>
