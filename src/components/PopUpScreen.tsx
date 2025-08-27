@@ -20,7 +20,7 @@ const PopUpScreen : React.FC<PopUpScreenProps> = ({
 }) => {
  return (
   <div className="fixed inset-0  bg-opacity-10  backdrop-blur-sm flex items-center justify-center z-50">
-    <div className="bg-gray-700 p-4 rounded-lg w-[90%] sm:w-[400px] mx-auto">
+    <div className="bg-amber-950 p-4 rounded-lg w-[90%] sm:w-[400px] mx-auto">
       <div className="mb-4">
         <label className="block  text-white mb-1">Title:</label>
         <input
