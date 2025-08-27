@@ -47,6 +47,9 @@ const Chess: React.FC = () => {
     []
   );
   const [winner, setWinner] = useState<boolean>(false);
+   const FILES = Array.from({ length: 8 }, (_, i) =>
+    String.fromCharCode(65 + i)
+  );
 
   const getPawnMoves = (
     row: number,
@@ -291,8 +294,7 @@ const Chess: React.FC = () => {
   };
 
   const getSquare = (row: number, col: number): string => {
-    const files = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    return `${files[col]}${8 - row}`;
+    return `${FILES[col]}${8 - row}`;
   };
 
   const onRestart = () => {
@@ -318,6 +320,9 @@ const Chess: React.FC = () => {
       const target = board[row][col];
       const symbol = pieces[board[selRow][selCol]];
 
+
+
+        
       const fromSquare = getSquare(selRow, selCol);
       const toSquare = getSquare(row, col);
 
@@ -329,13 +334,13 @@ const Chess: React.FC = () => {
       };
       addMove(fromSquare, toSquare, symbol);
 
+
+
+
+
+
       let validMoves: [number, number][] = [];
 
-      if (piece === piece.toUpperCase()) {
-        var color = "white";
-      } else {
-        color = "black";
-      }
 
       if (target.toUpperCase() === "K") {
         const newboard = board.map((prev) => [...prev]);
@@ -424,15 +429,15 @@ const Chess: React.FC = () => {
 
     console.log("Turns → Black:", blackTurn, "White:", whiteTurn);
   };
-
+ 
   return (
     <div className="flex flex-row gap-5  ">
       <div className="inline-block p-2 bg-[#3b1e0a] border-4 border-[#3b1e0a] m-auto my-10 ">
         {/* Top letters */}
-        <div className="flex justify-center text-white font-bold mb-1 px-6 ">
-          {["A", "B", "C", "D", "E", "F", "G", "H"].map((f) => (
-            <div key={f} className="w-14 text-center">
-              {f}
+        <div className="flex justify-center text-white font-bold mb-1 px-6">
+          {FILES.map((file) => (
+            <div key={file} className="w-14 text-center">
+              {file}
             </div>
           ))}
         </div>
@@ -451,10 +456,8 @@ const Chess: React.FC = () => {
                 );
 
                 const piece = board[rowIndex][colindex];
-                const isWhitePiece =
-                  piece === piece.toUpperCase() && piece !== "";
-                const isBlackPiece =
-                  piece === piece.toLowerCase() && piece !== "";
+                const isWhitePiece = piece === piece.toUpperCase() && piece !== "";
+                const isBlackPiece = piece === piece.toLowerCase() && piece !== "";
                 const isClickable =
                   (whiteTurn && isWhitePiece) ||
                   (blackTurn && isBlackPiece) ||
@@ -490,14 +493,19 @@ const Chess: React.FC = () => {
         </div>
 
         {/* Bottom letters */}
-        <div className="flex justify-center text-white font-bold mt-1 px-6">
-          {["A", "B", "C", "D", "E", "F", "G", "H"].map((f) => (
-            <div key={f} className="w-14 text-center">
-              {f}
+
+        <div className="flex justify-center text-white font-bold mb-1 px-6">
+          {FILES.map((file) => (
+            <div key={file} className="w-14 text-center">
+              {file}
             </div>
           ))}
         </div>
       </div>
+
+
+
+
 
       <div className="flex flex-col gap-2 border-2 w-[37%]  bg-amber-950 rounded-2xl m-auto">
         <div className="flex  p-5 border-2 justify-center m-5 bg-[#f0d9b5] text-black text-2xl ">
