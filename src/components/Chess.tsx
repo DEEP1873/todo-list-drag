@@ -98,6 +98,7 @@ type Move = {
   symbol: string;
 };
 
+
 const Chess: React.FC = () => {
   const [board, setBoard] = useState(initialBoard);
   const [select, setSelect] = useState<[number, number] | null>(null);
@@ -240,9 +241,10 @@ const Chess: React.FC = () => {
     const isWhite = piece?.color === PieceColor.WHITE;
     const moves: [number, number][] = [];
 
-    const exploreMove = (dr: number, dc: number) => {
+    const exploreDirection = (dr: number, dc: number) => {
       const r = row + dr;
       const c = col + dc;
+      
 
       if (r >= 0 && r < colval2 && c >= 0 && c < colval2) {
         const target = board[r][c];
@@ -257,18 +259,15 @@ const Chess: React.FC = () => {
       }
     };
 
-    const knightMoves = [
-      [-2, -1],
-      [-2, 1], // Up 2
-      [2, -1],
-      [2, 1], // Down 2
-      [-1, -2],
-      [-1, 2], // Up 1
-      [1, -2],
-      [1, 2], // Down 1
-    ];
 
-    knightMoves.forEach(([dr, dc]) => exploreMove(dr, dc));
+    exploreDirection(-2,-1);
+    exploreDirection(-2,1);
+    exploreDirection(2,-1);
+    exploreDirection(2,1);
+    exploreDirection(-1,-2);
+    exploreDirection(-1,2);
+    exploreDirection(1,-2);
+    exploreDirection(1,2);
 
     return moves;
   };
@@ -403,7 +402,7 @@ const Chess: React.FC = () => {
 
       let validMoves: [number, number][] = [];
 
-      if (target && target.type === piecetype.KING) {
+      if (target && target.type === piecetype.KING && target.color !== piece?.color ) {
         const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
         newboard[selRow][selCol] = null;
