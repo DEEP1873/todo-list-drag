@@ -1,93 +1,94 @@
 import React, { useState } from "react";
 
-enum piecetype {
-  KING = "k",
+enum piecetyp {
   QUEEN = "Q",
   HORSE = "H",
   CAMMEL = "C",
-  PAWN = "P",
   ELEPHANT = "E",
+  PAWN = "P",
+  KING = "k",
 }
 
 enum PieceColor {
   WHITE = "white",
   BLACK = "black",
 }
-interface Piece {
-  type: piecetype;
+
+interface Piecety {
+  type: piecetyp;
   color: PieceColor;
 }
 
-const getPieceSymbol = (piece: Piece | null): string => {
+const getPieceSymbol = (piece: Piecety | null): string => {
   if (!piece) return "";
 
   const symbols: Record<string, string> = {
-    [`${piecetype.KING}-${PieceColor.WHITE}`]: "♔",
-    [`${piecetype.QUEEN}-${PieceColor.WHITE}`]: "♕",
-    [`${piecetype.ELEPHANT}-${PieceColor.WHITE}`]: "♖",
-    [`${piecetype.CAMMEL}-${PieceColor.WHITE}`]: "♗",
-    [`${piecetype.HORSE}-${PieceColor.WHITE}`]: "♘",
-    [`${piecetype.PAWN}-${PieceColor.WHITE}`]: "♙",
-    [`${piecetype.KING}-${PieceColor.BLACK}`]: "♚",
-    [`${piecetype.QUEEN}-${PieceColor.BLACK}`]: "♛",
-    [`${piecetype.ELEPHANT}-${PieceColor.BLACK}`]: "♜",
-    [`${piecetype.CAMMEL}-${PieceColor.BLACK}`]: "♝",
-    [`${piecetype.HORSE}-${PieceColor.BLACK}`]: "♞",
-    [`${piecetype.PAWN}-${PieceColor.BLACK}`]: "♟︎",
+    [`${piecetyp.KING}-${PieceColor.WHITE}`]: "♔",
+    [`${piecetyp.QUEEN}-${PieceColor.WHITE}`]: "♕",
+    [`${piecetyp.ELEPHANT}-${PieceColor.WHITE}`]: "♖",
+    [`${piecetyp.CAMMEL}-${PieceColor.WHITE}`]: "♗",
+    [`${piecetyp.HORSE}-${PieceColor.WHITE}`]: "♘",
+    [`${piecetyp.PAWN}-${PieceColor.WHITE}`]: "♙",
+    [`${piecetyp.KING}-${PieceColor.BLACK}`]: "♚",
+    [`${piecetyp.QUEEN}-${PieceColor.BLACK}`]: "♛",
+    [`${piecetyp.ELEPHANT}-${PieceColor.BLACK}`]: "♜",
+    [`${piecetyp.CAMMEL}-${PieceColor.BLACK}`]: "♝",
+    [`${piecetyp.HORSE}-${PieceColor.BLACK}`]: "♞",
+    [`${piecetyp.PAWN}-${PieceColor.BLACK}`]: "♟︎",
   };
 
   return symbols[`${piece.type}-${piece.color}`] || "";
 };
 
-const createPiece = (type: piecetype, color: PieceColor): Piece => ({
+const createPiece = (type: piecetyp, color: PieceColor): Piecety => ({
   type,
   color,
 });
 
-const initialBoard: (Piece | null)[][] = [
+const initialBoard: (Piecety | null)[][] = [
   [
-    createPiece(piecetype.ELEPHANT, PieceColor.BLACK),
-    createPiece(piecetype.HORSE, PieceColor.BLACK),
-    createPiece(piecetype.CAMMEL, PieceColor.BLACK),
-    createPiece(piecetype.KING, PieceColor.BLACK),
-    createPiece(piecetype.QUEEN, PieceColor.BLACK),
-    createPiece(piecetype.CAMMEL, PieceColor.BLACK),
-    createPiece(piecetype.HORSE, PieceColor.BLACK),
-    createPiece(piecetype.ELEPHANT, PieceColor.BLACK),
+    createPiece(piecetyp.ELEPHANT, PieceColor.BLACK),
+    createPiece(piecetyp.HORSE, PieceColor.BLACK),
+    createPiece(piecetyp.CAMMEL, PieceColor.BLACK),
+    createPiece(piecetyp.KING, PieceColor.BLACK),
+    createPiece(piecetyp.QUEEN, PieceColor.BLACK),
+    createPiece(piecetyp.CAMMEL, PieceColor.BLACK),
+    createPiece(piecetyp.HORSE, PieceColor.BLACK),
+    createPiece(piecetyp.ELEPHANT, PieceColor.BLACK),
   ],
   [
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
-    createPiece(piecetype.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
+    createPiece(piecetyp.PAWN, PieceColor.BLACK),
   ],
   [null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null],
   [
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
-    createPiece(piecetype.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
+    createPiece(piecetyp.PAWN, PieceColor.WHITE),
   ],
   [
-    createPiece(piecetype.ELEPHANT, PieceColor.WHITE),
-    createPiece(piecetype.HORSE, PieceColor.WHITE),
-    createPiece(piecetype.CAMMEL, PieceColor.WHITE),
-    createPiece(piecetype.QUEEN, PieceColor.WHITE),
-    createPiece(piecetype.KING, PieceColor.WHITE),
-    createPiece(piecetype.CAMMEL, PieceColor.WHITE),
-    createPiece(piecetype.HORSE, PieceColor.WHITE),
-    createPiece(piecetype.ELEPHANT, PieceColor.WHITE),
+    createPiece(piecetyp.ELEPHANT, PieceColor.WHITE),
+    createPiece(piecetyp.HORSE, PieceColor.WHITE),
+    createPiece(piecetyp.CAMMEL, PieceColor.WHITE),
+    createPiece(piecetyp.QUEEN, PieceColor.WHITE),
+    createPiece(piecetyp.KING, PieceColor.WHITE),
+    createPiece(piecetyp.CAMMEL, PieceColor.WHITE),
+    createPiece(piecetyp.HORSE, PieceColor.WHITE),
+    createPiece(piecetyp.ELEPHANT, PieceColor.WHITE),
   ],
 ];
 
@@ -97,7 +98,63 @@ type Move = {
   to: string;
   symbol: string;
 };
+type Direction = [number, number];
 
+const pieceDirections: Record<
+  piecetyp,
+  { dirs: Direction[]; maxSteps: number }
+> = {
+  [piecetyp.PAWN]: {
+    dirs: [],
+    maxSteps: 1,
+  },
+  [piecetyp.ELEPHANT]: {
+    dirs: [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+    ],
+    maxSteps: 8,
+  },
+  [piecetyp.HORSE]: {
+    dirs: [
+      [-2, -1],
+      [-2, 1],
+      [2, -1],
+      [2, 1],
+      [-1, -2],
+      [-1, 2],
+      [1, -2],
+      [1, 2],
+    ],
+    maxSteps: 1,
+  },
+  [piecetyp.CAMMEL]: {
+    dirs: [
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1],
+    ],
+    maxSteps: 8,
+  },
+
+  [piecetyp.QUEEN]: {
+    dirs: [
+      [-1, -1],
+      [-1, 0],
+      [-1, 1],
+      [0, -1],
+      [0, 1],
+      [1, -1],
+      [1, 0],
+      [1, 1],
+    ],
+    maxSteps: 8,
+  },
+  [piecetyp.KING]: { dirs: [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]], maxSteps: 1 },
+};
 
 const Chess: React.FC = () => {
   const [board, setBoard] = useState(initialBoard);
@@ -114,13 +171,13 @@ const Chess: React.FC = () => {
     String.fromCharCode(65 + i)
   );
 
-  const colval = 7;
+  
   const colval2 = 8;
 
   const getPawnMoves = (
     row: number,
     col: number,
-    board: (Piece | null)[][]
+    board: ( Piecety | null)[][]
   ): [number, number][] => {
     const piece = board[row][col];
     const moves: [number, number][] = [];
@@ -148,19 +205,18 @@ const Chess: React.FC = () => {
 
       if (
         row > 0 &&
-        col <= colval &&
+        col <= colval2 &&
         board[row - 1][col + 1] &&
         board[row - 1][col + 1]?.color !== PieceColor.WHITE
       ) {
         moves.push([row - 1, col + 1]);
       }
 
-      
     }
 
     //black
     if (piece?.color === PieceColor.BLACK) {
-      if (row < colval && board[row + 1][col] === null) {
+      if (row < colval2 && board[row + 1][col] === null) {
         moves.push([row + 1, col]);
         if (row === 1 && board[row + 2][col] === null) {
           moves.push([row + 2, col]);
@@ -168,8 +224,8 @@ const Chess: React.FC = () => {
       }
 
       if (
-        row < colval &&
-        col < colval &&
+        row < colval2 &&
+        col < colval2 &&
         board[row + 1][col + 1] &&
         board[row + 1][col + 1]?.color !== PieceColor.BLACK
       ) {
@@ -177,7 +233,7 @@ const Chess: React.FC = () => {
       }
 
       if (
-        row < colval &&
+        row < colval2 &&
         col > 0 &&
         board[row + 1][col - 1] &&
         board[row + 1][col - 1]?.color !== PieceColor.BLACK
@@ -189,176 +245,75 @@ const Chess: React.FC = () => {
     return moves;
   };
 
-  const getElepMoves = (
+  const getMoves = (
     row: number,
     col: number,
-    board: (Piece | null)[][]
+    board: (Piecety | null)[][]
   ): [number, number][] => {
     const piece = board[row][col];
-    const isWhite = piece?.color === PieceColor.WHITE;
+    if (!piece) return [];
+
     const moves: [number, number][] = [];
 
-    const exploreDirection = (dr: number, dc: number) => {
-      let r = row + dr;
-      let c = col + dc;
+    const config = pieceDirections[piece.type];
 
-      while (r >= 0 && r < colval2 && c >= 0 && c < colval2) {
-        const target = board[r][c];
+    for (const [dr, dc] of config.dirs) {
+      let steps = 1;
+      let updatedrow = row + dr, updatedcol = col + dc;
 
-        if (target === null) {
-          // Empty → can move
-          moves.push([r, c]);
-        } else if ((target.color === PieceColor.WHITE) === isWhite) {
-          // Same color → block, stop here
+      if (piece.type === piecetyp.PAWN) {
+        // forward
+        const dir = piece.color===PieceColor.WHITE ? -1 : 1;
+        const startRow = piece.color===PieceColor.WHITE  ? 6 : 1;
+
+        if (board[row + dir][col] === null) {
+          moves.push([row + dir, col]);
+  
+          // double step
+          if (row === startRow && board[row + 2 * dir][col]  === null) {
+            moves.push([row + 2 * dir, col]);
+          }
+
+        }
+
+        // captures
+        for (let dc of [-1, 1]) {
+          const r = row + dir,
+            c = col + dc;
+          if (r >= 0 && r < 8 && c >= 0 && c < 8) {
+            const target = board[r][c];
+            if (target && target.color !== piece.color) {
+              moves.push([r, c]);
+            }
+          }
+        }
+
+        return moves;
+      }
+
+      while (
+        updatedrow >= 0 &&
+        updatedrow < colval2 &&
+        updatedcol >= 0 &&
+        updatedcol < colval2 &&
+        steps <= config.maxSteps
+      ) {
+       
+        const target = board[updatedrow][updatedcol];
+        if (!target) {
+          moves.push([updatedrow, updatedcol]);
+        } else if (target.color !== piece?.color) {
+          moves.push([updatedrow, updatedcol]);
           break;
         } else {
-          // Opponent → can capture, then stop
-          moves.push([r, c]);
           break;
         }
 
-        r += dr;
-        c += dc;
+        updatedrow += dr;
+        updatedcol += dc;
+        steps++;
       }
-    
-    };
-
-    // rook goes 4 directions
-    exploreDirection(-1, 0); // up
-    exploreDirection(1, 0); // down
-    exploreDirection(0, -1); // left
-    exploreDirection(0, 1); // right
-
-    return moves;
-  };
-
-  const getHorseMoves = (
-    row: number,
-    col: number,
-    board: (Piece | null)[][]
-  ): [number, number][] => {
-    const piece = board[row][col];
-    const isWhite = piece?.color === PieceColor.WHITE;
-    const moves: [number, number][] = [];
-
-    const exploreDirection = (dr: number, dc: number) => {
-      const r = row + dr;
-      const c = col + dc;
-      
-
-      if (r >= 0 && r < colval2 && c >= 0 && c < colval2) {
-        const target = board[r][c];
-
-        if (target === null) {
-          // Empty square  valid
-          moves.push([r, c]);
-        } else if ((target.color === PieceColor.WHITE) !== isWhite) {
-          moves.push([r, c]);
-          // Opponent piece capture allowed
-        }
-      }
-    };
-
-
-    exploreDirection(-2,-1);
-    exploreDirection(-2,1);
-    exploreDirection(2,-1);
-    exploreDirection(2,1);
-    exploreDirection(-1,-2);
-    exploreDirection(-1,2);
-    exploreDirection(1,-2);
-    exploreDirection(1,2);
-
-    return moves;
-  };
-
-  const getCamelMoves = (
-    row: number,
-    col: number,
-    board: (Piece | null)[][]
-  ): [number, number][] => {
-    const piece = board[row][col];
-    const isWhite = piece?.color === PieceColor.WHITE;
-    const moves: [number, number][] = [];
-
-    const exploreDirection = (dr: number, dc: number) => {
-      let r = row + dr;
-      let c = col + dc;
-
-      while (r >= 0 && r < colval2 && c >= 0 && c < colval2) {
-        const target = board[r][c];
-
-        if (target === null) {
-          moves.push([r, c]);
-        } else if ((target.color === PieceColor.WHITE) === isWhite) {
-          break;
-        } else {
-          moves.push([r, c]);
-          break;
-        }
-
-        r += dr;
-        c += dc;
-      }
-      console.log(moves);
-    };
-
-    exploreDirection(-1, +1); // up
-    exploreDirection(1, -1); // down
-    exploreDirection(-1, -1); // left
-    exploreDirection(1, 1); // right
-
-    return moves;
-  };
-
-  const getQueenMoves = (
-    row: number,
-    col: number,
-    board: (Piece | null)[][]
-  ): [number, number][] => {
-    console.log("enter in the queen function");
-
-    const elephant = getElepMoves(row, col, board); // rook-like moves
-    const camel = getCamelMoves(row, col, board); // bishop-like moves
-
-    return [...elephant, ...camel];
-  };
-
-  const getKingMoves = (
-    row: number,
-    col: number,
-    board: (Piece | null)[][]
-  ): [number, number][] => {
-    const piece = board[row][col];
-    const isWhite = piece?.color === PieceColor.WHITE;
-    const moves: [number, number][] = [];
-
-    const exploreDirection = (dr: number, dc: number) => {
-      const r = row + dr;
-      const c = col + dc;
-
-      if (r >= 0 && r < colval2 && c >= 0 && c < colval2) {
-        const target = board[r][c];
-        if (target === null) {
-          moves.push([r, c]);
-        } else if ((target.color === PieceColor.WHITE) !== isWhite) {
-          // console.log("ddddd")
-          moves.push([r, c]); // opponent piece → capture
-        }
-      }
-      console.log(moves);
-    };
-
-    exploreDirection(-1, 0); // up
-    exploreDirection(1, 0); // down
-    exploreDirection(0, -1); // left
-    exploreDirection(0, 1); // right
-
-    exploreDirection(-1, -1); // up-left
-    exploreDirection(-1, 1); // up-right
-    exploreDirection(1, -1); // down-left
-    exploreDirection(1, 1); // down-right
-
+    }
     return moves;
   };
 
@@ -379,10 +334,7 @@ const Chess: React.FC = () => {
   };
 
   const handleclick = (row: number, col: number) => {
-   
-
     if (select) {
-      
       const [selRow, selCol] = select;
       const piece = board[selRow][selCol];
       // const isWhite =  PieceColor.WHITE;
@@ -402,7 +354,7 @@ const Chess: React.FC = () => {
 
       let validMoves: [number, number][] = [];
 
-      if (target && target.type === piecetype.KING && target.color !== piece?.color ) {
+      if (target && target.type === piecetyp.KING && target.color !== piece?.color ) {
         const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
         newboard[selRow][selCol] = null;
@@ -414,26 +366,26 @@ const Chess: React.FC = () => {
         return;
       }
 
-      if (piece && piece.type === piecetype.PAWN) {
+      if (piece && piece.type === piecetyp.PAWN) {
         validMoves = getPawnMoves(selRow, selCol, board);
       }
 
-      if (piece && piece.type === piecetype.ELEPHANT) {
-        validMoves = getElepMoves(selRow, selCol, board);
+      if (piece && piece.type === piecetyp.ELEPHANT) {
+        validMoves = getMoves(selRow, selCol, board);
       }
-      if (piece && piece.type === piecetype.HORSE) {
-        validMoves = getHorseMoves(selRow, selCol, board);
+      if (piece && piece.type === piecetyp.HORSE) {
+        validMoves = getMoves(selRow, selCol, board);
       }
-      if (piece && piece.type === piecetype.CAMMEL) {
-        validMoves = getCamelMoves(selRow, selCol, board);
-      }
-
-      if (piece && piece.type === piecetype.QUEEN) {
-        validMoves = getQueenMoves(selRow, selCol, board);
+      if (piece && piece.type === piecetyp.CAMMEL) {
+        validMoves = getMoves(selRow, selCol, board);
       }
 
-      if (piece && piece.type === piecetype.KING) {
-        validMoves = getKingMoves(selRow, selCol, board);
+      if (piece && piece.type === piecetyp.QUEEN) {
+        validMoves = getMoves(selRow, selCol, board);
+      }
+
+      if (piece && piece.type === piecetyp.KING) {
+        validMoves = getMoves(selRow, selCol, board);
       }
       const isValidMove = validMoves.some(([r, c]) => r === row && c === col);
 
@@ -466,18 +418,18 @@ const Chess: React.FC = () => {
         }
 
         let moves: [number, number][] = [];
-        if (currentpiece.type === piecetype.PAWN)
+        if (currentpiece.type === piecetyp.PAWN)
           moves = getPawnMoves(row, col, board);
-        if (currentpiece.type === piecetype.ELEPHANT)
-          moves = getElepMoves(row, col, board);
-        if (currentpiece.type === piecetype.HORSE)
-          moves = getHorseMoves(row, col, board);
-        if (currentpiece.type === piecetype.CAMMEL)
-          moves = getCamelMoves(row, col, board);
-        if (currentpiece.type === piecetype.QUEEN)
-          moves = getQueenMoves(row, col, board);
-        if (currentpiece.type === piecetype.KING)
-          moves = getKingMoves(row, col, board);
+        if (currentpiece.type === piecetyp.ELEPHANT)
+          moves = getMoves(row, col, board);
+        if (currentpiece.type === piecetyp.HORSE)
+          moves = getMoves(row, col, board);
+        if (currentpiece.type === piecetyp.CAMMEL)
+          moves = getMoves(row, col, board);
+        if (currentpiece.type === piecetyp.QUEEN)
+          moves = getMoves(row, col, board);
+        if (currentpiece.type === piecetyp.KING)
+          moves = getMoves(row, col, board);
 
         setHighlightedMoves(moves);
       }
