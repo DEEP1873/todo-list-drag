@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-
+import React, { useEffect, useState } from "react";
+import Confetti from "react-confetti";
 enum piecetyp {
   QUEEN = "Q",
   HORSE = "H",
@@ -153,7 +153,19 @@ const pieceDirections: Record<
     ],
     maxSteps: 8,
   },
-  [piecetyp.KING]: { dirs: [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]], maxSteps: 1 },
+  [piecetyp.KING]: {
+    dirs: [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+      [-1, -1],
+      [-1, 1],
+      [1, -1],
+      [1, 1],
+    ],
+    maxSteps: 1,
+  },
 };
 
 const Chess: React.FC = () => {
@@ -167,17 +179,20 @@ const Chess: React.FC = () => {
     []
   );
   const [winner, setWinner] = useState<boolean>(false);
+  const [timeLeft, setTimeLeft] = useState<number>(30);
+
   const FILES = Array.from({ length: 8 }, (_, i) =>
     String.fromCharCode(65 + i)
   );
 
   
+
   const colval2 = 8;
 
   const getPawnMoves = (
     row: number,
     col: number,
-    board: ( Piecety | null)[][]
+    board: (Piecety | null)[][]
   ): [number, number][] => {
     const piece = board[row][col];
     const moves: [number, number][] = [];
@@ -211,7 +226,6 @@ const Chess: React.FC = () => {
       ) {
         moves.push([row - 1, col + 1]);
       }
-
     }
 
     //black
@@ -259,21 +273,21 @@ const Chess: React.FC = () => {
 
     for (const [dr, dc] of config.dirs) {
       let steps = 1;
-      let updatedrow = row + dr, updatedcol = col + dc;
+      let updatedrow = row + dr,
+        updatedcol = col + dc;
 
       if (piece.type === piecetyp.PAWN) {
         // forward
-        const dir = piece.color===PieceColor.WHITE ? -1 : 1;
-        const startRow = piece.color===PieceColor.WHITE  ? 6 : 1;
+        const dir = piece.color === PieceColor.WHITE ? -1 : 1;
+        const startRow = piece.color === PieceColor.WHITE ? 6 : 1;
 
         if (board[row + dir][col] === null) {
           moves.push([row + dir, col]);
-  
+
           // double step
-          if (row === startRow && board[row + 2 * dir][col]  === null) {
+          if (row === startRow && board[row + 2 * dir][col] === null) {
             moves.push([row + 2 * dir, col]);
           }
-
         }
 
         // captures
@@ -298,7 +312,6 @@ const Chess: React.FC = () => {
         updatedcol < colval2 &&
         steps <= config.maxSteps
       ) {
-       
         const target = board[updatedrow][updatedcol];
         if (!target) {
           moves.push([updatedrow, updatedcol]);
@@ -322,6 +335,7 @@ const Chess: React.FC = () => {
   };
 
   const onRestart = () => {
+    setTimeLeft(30);
     setBoard(initialBoard);
     setSelect(null);
     setHighlightedMoves([]);
@@ -354,7 +368,11 @@ const Chess: React.FC = () => {
 
       let validMoves: [number, number][] = [];
 
-      if (target && target.type === piecetyp.KING && target.color !== piece?.color ) {
+      if (
+        target &&
+        target.type === piecetyp.KING &&
+        target.color !== piece?.color
+      ) {
         const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
         newboard[selRow][selCol] = null;
@@ -362,6 +380,7 @@ const Chess: React.FC = () => {
         setBoard(newboard);
         setSelect(null);
         setWinner(true);
+
         setHighlightedMoves([]);
         return;
       }
@@ -390,15 +409,16 @@ const Chess: React.FC = () => {
       const isValidMove = validMoves.some(([r, c]) => r === row && c === col);
 
       if (isValidMove) {
-        const newboard = board.map((prev) => [...prev]);
+        const newboard = board.map((prev) => [...prev]);  
         newboard[row][col] = piece;
-
+        
         newboard[selRow][selCol] = null;
+
 
         setBoard(newboard);
         setSelect(null);
         setHighlightedMoves([]);
-
+        setTimeLeft(30);
         setBlackTurn(!blackTurn);
         setWhiteTurn(!whiteTurn);
       } else {
@@ -436,24 +456,41 @@ const Chess: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (timeLeft === 0 && !winner) {
+      setTimeLeft(30);
+      setBlackTurn(!blackTurn);
+      setWhiteTurn(!whiteTurn);
+    }
+
+    // stop when time ends
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer); // cleanup
+  }, [timeLeft]);
+
   return (
-    <div className="flex flex-row gap-5  ">
-      <div className="inline-block p-2 bg-[#3b1e0a] border-4 border-[#3b1e0a] m-auto my-10 ">
-        {/* Top letters */}
+    <div className="flex flex-row  absolute top-0 w-full">
+      <div className="inline-block p-2  m-auto my-10 ">
+        {/* Top letters
         <div className="flex justify-center text-white font-bold mb-1 px-6">
           {FILES.map((file) => (
             <div key={file} className="w-14 text-center">
               {file}
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Board */}
-        <div className="flex flex-col ">
+        <div className="flex flex-col">
           {/* leftpart */}
           {board.map((row, rowIndex) => (
             <div key={rowIndex} className="flex ">
-              <div className="text-white font-bold p-4">{8 - rowIndex}</div>
+
+              <div className="text-white font-bold p-4 shadow-2xl">{8-rowIndex}</div>
 
               {row.map((col, colindex) => {
                 const isDark = (rowIndex + colindex) % 2 === 1;
@@ -475,7 +512,7 @@ const Chess: React.FC = () => {
                   <div
                     key={colindex}
                     onClick={() => handleclick(rowIndex, colindex)}
-                    className={`flex items-center text-3xl h-14 w-14 justify-center  ${
+                    className={`flex items-center text-3xl h-17 w-17 justify-center shadow-2xl ${
                       isDark ? "bg-[#b58863]" : "bg-[#f0d9b5]"
                     }
                     ${
@@ -494,14 +531,14 @@ const Chess: React.FC = () => {
                 );
               })}
 
-              <div className="text-white font-bold p-4">{8 - rowIndex}</div>
+              {/* <div className="text-white font-bold p-4">{colval2 - rowIndex}</div> */}
             </div>
           ))}
         </div>
 
         {/* Bottom letters */}
 
-        <div className="flex justify-center text-white font-bold mb-1 px-6">
+        <div className="flex justify-center font-bold mb-1 px-12 gap-3 text-white shadow-2xl items-center">
           {FILES.map((file) => (
             <div key={file} className="w-14 text-center">
               {file}
@@ -510,12 +547,14 @@ const Chess: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 border-2 w-[37%]  bg-amber-950 rounded-2xl m-auto">
-        <div className="flex  p-5 border-2 justify-center m-5 bg-[#f0d9b5] text-black text-2xl ">
+      <div className="flex flex-col gap-2  w-[37%]    rounded-2xl m-auto">
+        <div className="flex  p-5  rounded-2xl justify-center  bg-[#f0d9b5] text-black text-2xl ">
           {whiteTurn ? (
             winner ? (
-              <div className="text-black font-bold">
-                🎉 White Wins 🎉
+              <div className="text-black font-bold  flex flex-row">
+                <Confetti />
+                <p className="mb-4 self-center">🎉 White Wins 🎉</p>
+                
                 <button
                   onClick={onRestart}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -524,20 +563,31 @@ const Chess: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div>White's Turn</div>
+              <div className="flex flex-row gap-2  justify-between w-full">
+                <div className="m-auto text-black font-semibold">White's Turn </div>
+                <div className="flex justify-center items-center  h-10 w-10 p-2  shadow-2xl border-2 border-amber-950 rounded-full  ">
+                  <h1 className="text-2xl">{timeLeft}</h1>
+                </div>
+              </div>
             )
           ) : winner ? (
-            <div>
-              🎉 Black Wins {""} 🎉
+            <div className="text-black font-bold flex flex-row">
+               <Confetti />
+                <p className="mb-2  self-center">🎉 Black Wins 🎉</p>
               <button
                 onClick={onRestart}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="px-6 py-2 bg-amber-950 text-white rounded-lg hover:bg-amber-950"
               >
                 Restart
               </button>{" "}
             </div>
           ) : (
-            <div>Black's Turn</div>
+            <div className="flex flex-row gap-2 justify-between w-full">
+              <div className="m-auto text-black font-semibold">Black's Turn</div>
+              <div className="flex justify-center items-center h-10 w-10 p-2  shadow-2xl border-2 border-amber-950 rounded-full  ">
+                <h1 className="text-2xl">{timeLeft}</h1>
+              </div>
+            </div>
           )}
         </div>
 
@@ -545,7 +595,7 @@ const Chess: React.FC = () => {
           <h2 className="font-bold mb-2 border-2 rounded-2xl p-2 self-center">
             Moves History
           </h2>
-          <div className="flex flex-col gap-1 h-80 max-h-80 ">
+          <div className="flex flex-col gap-1 h-90 max-h-90 ">
             {moves.map((move) => (
               <div
                 key={move.id}
