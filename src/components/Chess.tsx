@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Confetti from "react-confetti";
-enum piecetyp {
-  QUEEN = "Q",
-  HORSE = "H",
-  CAMMEL = "C",
-  ELEPHANT = "E",
-  PAWN = "P",
-  KING = "k",
-}
+import ChoicePopUpScreen from "./ChoicePopUpScreen";
+// import type { pieces } from "../config/chesspieces";
+import piecetyp from "../config/chesspieces";
+import PromotionOption from "../config/chesspieces";
 
 enum PieceColor {
   WHITE = "white",
@@ -168,9 +164,15 @@ const pieceDirections: Record<
   },
 };
 
+interface ChoicePopUpScreen {
+  options: PromotionOption[];
+  onSelect: (pieceName: string, pieceSymbol: string) => void;
+}
+
 const Chess: React.FC = () => {
   const [board, setBoard] = useState(initialBoard);
   const [select, setSelect] = useState<[number, number] | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const [moves, setMoves] = useState<Move[]>([]);
   const [blackTurn, setBlackTurn] = useState(false);
@@ -180,14 +182,80 @@ const Chess: React.FC = () => {
   );
   const [winner, setWinner] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<number>(30);
+  const [showChoicePopup, setShowChoicePopup] = useState(false);
+  const [promotionSquare, setPromotionSquare] = useState<{
+    row: number;
+    col: number;
+  } | null>(null);
 
   const FILES = Array.from({ length: 8 }, (_, i) =>
     String.fromCharCode(65 + i)
   );
 
-  
-
   const colval2 = 8;
+
+  const findKingPosition = (
+    board: (Piecety | null)[][],
+    color: PieceColor
+  ): [number, number] | null => {
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r][c];
+        if (piece && piece.type === piecetyp.KING && piece.color === color) {
+          return [r, c];
+        }
+      }
+    }
+    return null;
+  };
+
+  const isInCheck = (
+    board: (Piecety | null)[][],
+    color: PieceColor
+  ): boolean => {
+    const kingPos = findKingPosition(board, color);
+    if (!kingPos) return false;
+    const [kingRow, kingCol] = kingPos;
+    const opponentColor =
+      color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r][c];
+        if (piece && piece.color === opponentColor) {
+          const moves = getMoves(r, c, board);
+          if (moves.some(([mr, mc]) => mr === kingRow && mc === kingCol)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
+  const checkCheckmate = (
+    board: (Piecety | null)[][],
+    color: PieceColor
+  ): boolean => {
+    if (!isInCheck(board, color)) return false;
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r][c];
+        if (piece && piece.color === color) {
+          const moves = getMoves(r, c, board);
+          for (const [mr, mc] of moves) {
+            const newBoard = board.map((row) => row.slice());
+            newBoard[mr][mc] = piece;
+            newBoard[r][c] = null;
+            if (!isInCheck(newBoard, color)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    alert("Checkmate!");
+    return true;
+  };
 
   const getPawnMoves = (
     row: number,
@@ -276,35 +344,6 @@ const Chess: React.FC = () => {
       let updatedrow = row + dr,
         updatedcol = col + dc;
 
-      if (piece.type === piecetyp.PAWN) {
-        // forward
-        const dir = piece.color === PieceColor.WHITE ? -1 : 1;
-        const startRow = piece.color === PieceColor.WHITE ? 6 : 1;
-
-        if (board[row + dir][col] === null) {
-          moves.push([row + dir, col]);
-
-          // double step
-          if (row === startRow && board[row + 2 * dir][col] === null) {
-            moves.push([row + 2 * dir, col]);
-          }
-        }
-
-        // captures
-        for (let dc of [-1, 1]) {
-          const r = row + dir,
-            c = col + dc;
-          if (r >= 0 && r < 8 && c >= 0 && c < 8) {
-            const target = board[r][c];
-            if (target && target.color !== piece.color) {
-              moves.push([r, c]);
-            }
-          }
-        }
-
-        return moves;
-      }
-
       while (
         updatedrow >= 0 &&
         updatedrow < colval2 &&
@@ -342,8 +381,8 @@ const Chess: React.FC = () => {
     setMoves([]);
     setWinner(false);
 
-    setBlackTurn(!blackTurn);
-    setWhiteTurn(!whiteTurn);
+    setBlackTurn(false);
+    setWhiteTurn(true);
     return;
   };
 
@@ -385,6 +424,23 @@ const Chess: React.FC = () => {
         return;
       }
 
+      if (
+        piece?.type === piecetyp.PAWN &&
+        (row === 7 || row === 0) &&
+        piece.color !== target?.color
+      ) {
+        const newboard = board.map((prev) => [...prev]);
+        newboard[row][col] = piece;
+        newboard[selRow][selCol] = null;
+
+        setBoard(newboard);
+        setSelect(null);
+        setHighlightedMoves([]);
+        setPromotionSquare({ row, col });
+        setShowChoicePopup(true);
+        return;
+      }
+
       if (piece && piece.type === piecetyp.PAWN) {
         validMoves = getPawnMoves(selRow, selCol, board);
       }
@@ -406,15 +462,43 @@ const Chess: React.FC = () => {
       if (piece && piece.type === piecetyp.KING) {
         validMoves = getMoves(selRow, selCol, board);
       }
+
       const isValidMove = validMoves.some(([r, c]) => r === row && c === col);
 
       if (isValidMove) {
-        const newboard = board.map((prev) => [...prev]);  
+        const target = board[row][col];
+
+        if (target && target.color === piece?.color) {
+          setSelect(null);
+          setHighlightedMoves([]);
+          return; // stop here
+        }
+        const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
-        
         newboard[selRow][selCol] = null;
 
+        // Opponent color
+        const opponentColor =
+          piece?.color === PieceColor.WHITE
+            ? PieceColor.BLACK
+            : PieceColor.WHITE;
 
+        if (checkCheckmate(newboard, opponentColor)) {
+          // setWinner(true);
+          console.log("comes in checkmate");
+          setAlertMessage("Checkmate!");
+          setTimeout(() => setAlertMessage(null), 3000);
+        } else if (
+          isInCheck(newboard, opponentColor) &&
+          piece?.type !== piecetyp.KING
+        ) {
+          console.log("comes in check");
+          setAlertMessage("Check!");
+          // setTimeout(() => setAlertMessage(null), 3000);
+
+          alert("Check!");
+        }
+        // setAlertMessage(null);
         setBoard(newboard);
         setSelect(null);
         setHighlightedMoves([]);
@@ -426,6 +510,7 @@ const Chess: React.FC = () => {
         setHighlightedMoves([]);
       }
     } else {
+      setAlertMessage(null);
       const currentpiece = board[row][col];
       if (currentpiece !== null && !winner) {
         const isWhitePiece = currentpiece.color === PieceColor.WHITE;
@@ -456,6 +541,56 @@ const Chess: React.FC = () => {
     }
   };
 
+  const countPieces = (
+    board: (Piecety | null)[][],
+    pieceType: piecetyp,
+    color: PieceColor
+  ) => {
+    return board
+      .flat()
+      .filter((cell) => cell?.type === pieceType && cell?.color === color)
+      .length;
+  };
+
+  // Handle promotion callback
+  const handlePromotion = (pieceName: string, pieceSymbol: string) => {
+    if (!promotionSquare) return;
+    console.log("Promoted to:", pieceName, pieceSymbol);
+    const { row, col } = promotionSquare;
+
+    const currentPiece = board[row][col];
+    if (!currentPiece) return;
+
+    const existingCount = countPieces(
+      board,
+      pieceName as piecetyp,
+      currentPiece.color
+    );
+
+    if (existingCount >= 3) {
+      alert(`You can only have 3 ${pieceName}s on the board!`);
+      return;
+    }
+
+    setBoard((prevBoard) => {
+      const newBoard = prevBoard.map((r) => [...r]);
+
+      const currentPiece = prevBoard[row][col];
+      if (!currentPiece) return newBoard;
+      newBoard[row][col] = {
+        type: pieceName as piecetyp,
+        color: currentPiece.color,
+      };
+
+      return newBoard;
+    });
+
+    setPromotionSquare(null);
+    setShowChoicePopup(false);
+    setBlackTurn(!blackTurn);
+    setWhiteTurn(!whiteTurn);
+  };
+
   useEffect(() => {
     if (timeLeft === 0 && !winner) {
       setTimeLeft(30);
@@ -473,24 +608,16 @@ const Chess: React.FC = () => {
   }, [timeLeft]);
 
   return (
-    <div className="flex flex-row  absolute top-0 w-full">
-      <div className="inline-block p-2  m-auto my-10 ">
-        {/* Top letters
-        <div className="flex justify-center text-white font-bold mb-1 px-6">
-          {FILES.map((file) => (
-            <div key={file} className="w-14 text-center">
-              {file}
-            </div>
-          ))}
-        </div> */}
-
+    <div className="flex flex-row  absolute top-0 w-full h-full">
+      <div className="inline-block p-2   m-auto my-15 ">
         {/* Board */}
         <div className="flex flex-col">
           {/* leftpart */}
           {board.map((row, rowIndex) => (
             <div key={rowIndex} className="flex ">
-
-              <div className="text-white font-bold p-4 shadow-2xl">{8-rowIndex}</div>
+              <div className="text-white font-bold p-4 drop-shadow-[3px_3px_3px_black]">
+                {8 - rowIndex}
+              </div>
 
               {row.map((col, colindex) => {
                 const isDark = (rowIndex + colindex) % 2 === 1;
@@ -530,15 +657,13 @@ const Chess: React.FC = () => {
                   </div>
                 );
               })}
-
-              {/* <div className="text-white font-bold p-4">{colval2 - rowIndex}</div> */}
             </div>
           ))}
         </div>
 
         {/* Bottom letters */}
 
-        <div className="flex justify-center font-bold mb-1 px-12 gap-3 text-white shadow-2xl items-center">
+        <div className="flex justify-center font-bold mb-1 px-12 gap-3 text-white  drop-shadow-[3px_3px_3px_black] items-center">
           {FILES.map((file) => (
             <div key={file} className="w-14 text-center">
               {file}
@@ -546,65 +671,97 @@ const Chess: React.FC = () => {
           ))}
         </div>
       </div>
-
-      <div className="flex flex-col gap-2  w-[37%]    rounded-2xl m-auto">
-        <div className="flex  p-5  rounded-2xl justify-center  bg-[#f0d9b5] text-black text-2xl ">
+      <div className="flex flex-col gap-4 w-[37%] h-full rounded-2xl m-auto">
+        <div className="flex mt-2 p-5 rounded-2xl justify-center bg-gradient-to-r from-amber-900 to-amber-100 text-black text-2xl shadow-xl border border-amber-200">
           {whiteTurn ? (
             winner ? (
-              <div className="text-black font-bold  flex flex-row">
+              <div className="text-black font-bold flex flex-col items-center gap-3">
                 <Confetti />
-                <p className="mb-4 self-center">🎉 White Wins 🎉</p>
-                
+                <p className="text-3xl">🎉 White Wins 🎉</p>
                 <button
                   onClick={onRestart}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  className="px-6 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-700 transition shadow-md"
                 >
                   Restart
                 </button>
               </div>
             ) : (
-              <div className="flex flex-row gap-2  justify-between w-full">
-                <div className="m-auto text-black font-semibold">White's Turn </div>
-                <div className="flex justify-center items-center  h-10 w-10 p-2  shadow-2xl border-2 border-amber-950 rounded-full  ">
-                  <h1 className="text-2xl">{timeLeft}</h1>
+              <div className="flex flex-col w-full items-center">
+                <div className="flex flex-row justify-between w-full items-center">
+                  <div className="m-auto text-black font-bold tracking-wide">
+                    ♔ White's Turn
+                  </div>
+                  <div className="flex justify-center items-center h-12 w-12 shadow-xl border-2 border-amber-900 rounded-full bg-amber-50">
+                    <h1 className="text-xl font-bold">{timeLeft}</h1>
+                  </div>
                 </div>
+                {/* ⚠️ Red alert text */}
+                {alertMessage && (
+                  <p className="text-red-600 text-lg font-semibold mt-2 shadow-2xl">
+                    {alertMessage}
+                  </p>
+                )}
               </div>
             )
           ) : winner ? (
-            <div className="text-black font-bold flex flex-row">
-               <Confetti />
-                <p className="mb-2  self-center">🎉 Black Wins 🎉</p>
+            <div className="text-black font-bold flex flex-col items-center gap-3">
+              <Confetti />
+              <p className="text-3xl">🎉 Black Wins 🎉</p>
               <button
                 onClick={onRestart}
-                className="px-6 py-2 bg-amber-950 text-white rounded-lg hover:bg-amber-950"
+                className="px-6 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-700 transition shadow-md"
               >
                 Restart
-              </button>{" "}
+              </button>
             </div>
           ) : (
-            <div className="flex flex-row gap-2 justify-between w-full">
-              <div className="m-auto text-black font-semibold">Black's Turn</div>
-              <div className="flex justify-center items-center h-10 w-10 p-2  shadow-2xl border-2 border-amber-950 rounded-full  ">
-                <h1 className="text-2xl">{timeLeft}</h1>
+            <div className="flex flex-col w-full items-center">
+              <div className="flex flex-row justify-between w-full items-center">
+                <div className="m-auto text-black font-bold tracking-wide">
+                  ♚ Black's Turn
+                </div>
+                <div className="flex justify-center items-center h-12 w-12 shadow-xl border-2 border-amber-900 rounded-full bg-amber-50">
+                  <h1 className="text-xl font-bold">{timeLeft}</h1>
+                </div>
               </div>
+              {/* ⚠️ Red alert text */}
+              {alertMessage && (
+                <p className="text-red-600 text-lg font-semibold mt-2 shadow-2xl">
+                  {alertMessage}
+                </p>
+              )}
             </div>
           )}
         </div>
 
-        <div className="flex flex-col border-1 p-5 bg-[#f0d9b5] rounded-2xl text-black  overflow-y-auto  ">
-          <h2 className="font-bold mb-2 border-2 rounded-2xl p-2 self-center">
-            Moves History
+        {/* Moves History Section */}
+        <div className="flex flex-col p-5 bg-gradient-to-r from-amber-900 to-amber-100 rounded-2xl text-black shadow-inner border border-amber-200 overflow-y-auto h-full">
+          <h2 className="font-extrabold mb-4 shadow-lg bg-amber-100 rounded-xl px-6 py-2 self-center text-lg">
+            📜 Moves History
           </h2>
-          <div className="flex flex-col gap-1 h-90 max-h-90 ">
-            {moves.map((move) => (
-              <div
-                key={move.id}
-                className="text-xl p-2 border-2 rounded-2xl font-semibold m-2"
-              >
-                {move.id}. {move.symbol} ---{">"} {move.from} - {move.to}
-              </div>
-            ))}
+          <div className="flex flex-col gap-3">
+            {moves.length === 0 ? (
+              <p className="text-center italic">No moves yet...</p>
+            ) : (
+              moves.map((move) => (
+                <div
+                  key={move.id}
+                  className="text-lg p-3 bg-amber-50 border border-amber-900 shadow-md rounded-xl font-semibold flex justify-between items-center hover:bg-amber-100 transition"
+                >
+                  <span>
+                    {move.id}. {move.symbol}
+                  </span>
+                  <span className="text-sm">
+                    ➡ {move.from} → {move.to}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
+        </div>
+
+        <div className="relative">
+          {showChoicePopup && <ChoicePopUpScreen onSelect={handlePromotion} />}
         </div>
       </div>
     </div>

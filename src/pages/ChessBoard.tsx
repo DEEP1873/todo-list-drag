@@ -6,7 +6,7 @@ import chessimg from "../assets/chessbackground5.avif"
 
 const ChessBoard :React.FC= () => {
   return (
-    <div className=' h-screen relative'>
+    <div className=' h-screen relative  '>
       <img src={chessimg} alt="" className='w-full h-screen object-cover' />
       <Chess/>
     </div>

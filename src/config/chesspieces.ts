@@ -1,101 +1,15 @@
-// Step 1: Define enum for pieces
-export enum pieces {
-  WhiteKing = "♔",
-  WhiteQueen = "♕",
-  WhiteRook = "♖",
-  WhiteBishop = "♗",
-  WhiteKnight = "♘",
-  WhitePawn = "♙",
-
-  BlackKing = "♚",
-  BlackQueen = "♛",
-  BlackRook = "♜",
-  BlackBishop = "♝",
-  BlackKnight = "♞",
-  BlackPawn = "♟︎",
-  Empty = "",
+enum piecetyp {
+  QUEEN = "Queen",
+  HORSE = "Horse",
+  CAMMEL = "Camel",
+  ELEPHANT = "Elephant",
+  PAWN = "Pawn",
+  KING = "King",
 }
 
-// Step 3: Define initial chess board using the enum
-export const initialBoard: pieces[][] = [
-  [
-    pieces.BlackRook,
-    pieces.BlackKnight,
-    pieces.BlackBishop,
-    pieces.BlackQueen,
-    pieces.BlackKing,
-    pieces.BlackBishop,
-    pieces.BlackKnight,
-    pieces.BlackRook,
-  ],
-  [
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-    pieces.BlackPawn,
-  ],
-  [
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-  ],
-  [
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-     pieces .Empty,
-  ],
-  [
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-  ],
-  [
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-    pieces.Empty,
-  ],
-  [
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-    pieces.WhitePawn,
-  ],
-  [
-    pieces.WhiteRook,
-    pieces.WhiteKnight,
-    pieces.WhiteBishop,
-    pieces.WhiteQueen,
-    pieces.WhiteKing,
-    pieces.WhiteBishop,
-    pieces.WhiteKnight,
-    pieces.WhiteRook,
-  ],
-];
+export interface PromotionOption {
+  name: string;
+  symbol: string;
+}  
+
+export default piecetyp ;
