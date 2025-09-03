@@ -187,6 +187,7 @@ const Chess: React.FC = () => {
     row: number;
     col: number;
   } | null>(null);
+  const [checkedKing, setCheckedKing] = useState<[number, number] | null>(null);
 
   const FILES = Array.from({ length: 8 }, (_, i) =>
     String.fromCharCode(65 + i)
@@ -223,7 +224,10 @@ const Chess: React.FC = () => {
         const piece = board[r][c];
         if (piece && piece.color === opponentColor) {
           const moves = getMoves(r, c, board);
-          if (moves.some(([mr, mc]) => mr === kingRow && mc === kingCol)) {
+          const kingCheckPath = moves.some(
+            ([mr, mc]) => mr === kingRow && mc === kingCol
+          );
+          if (kingCheckPath) {
             return true;
           }
         }
@@ -369,6 +373,41 @@ const Chess: React.FC = () => {
     return moves;
   };
 
+  // inside your Chess component (after getMoves and getPawnMoves)
+
+const getLegalMoves = (
+  row: number,
+  col: number,
+  board: (Piecety | null)[][],
+  color: PieceColor
+): [number, number][] => {
+  const piece = board[row][col];
+  if (!piece || !piece.color || piece.color !== color) return [];
+
+  let possibleMoves: [number, number][] = [];
+  if (piece.type === piecetyp.PAWN) {
+    possibleMoves = getPawnMoves(row, col, board);
+  } else {
+    possibleMoves = getMoves(row, col, board);
+  }
+
+  const legalMoves: [number, number][] = [];
+
+  for (const [pr, pc] of possibleMoves) {
+    const newBoard = board.map((r) => [...r]);
+
+    newBoard[pr][pc] = piece;
+    newBoard[row][col] = null;
+
+    if (!isInCheck(newBoard, piece.color)) {
+      legalMoves.push([pr, pc]);
+    }
+  }
+
+  return legalMoves;
+};
+
+
   const getSquare = (row: number, col: number): string => {
     return `${FILES[col]}${colval2 - row}`;
   };
@@ -393,17 +432,6 @@ const Chess: React.FC = () => {
       // const isWhite =  PieceColor.WHITE;
       const target = board[row][col];
       const symbol = getPieceSymbol(piece);
-
-      const fromSquare = getSquare(selRow, selCol);
-      const toSquare = getSquare(row, col);
-
-      const addMove = (from: string, to: string, symbol: string) => {
-        setMoves((prev) => [
-          ...prev,
-          { id: prev.length + 1, from, to, symbol },
-        ]);
-      };
-      addMove(fromSquare, toSquare, symbol);
 
       let validMoves: [number, number][] = [];
 
@@ -462,10 +490,22 @@ const Chess: React.FC = () => {
       if (piece && piece.type === piecetyp.KING) {
         validMoves = getMoves(selRow, selCol, board);
       }
-
-      const isValidMove = validMoves.some(([r, c]) => r === row && c === col);
+      
+      validMoves = getLegalMoves(selRow, selCol, board, piece?.color);
+      
+      var isValidMove = validMoves.some(([r, c]) => r === row && c === col);
 
       if (isValidMove) {
+        const fromSquare = getSquare(selRow, selCol);
+        const toSquare = getSquare(row, col);
+
+        const addMove = (from: string, to: string, symbol: string) => {
+          setMoves((prev) => [
+            ...prev,
+            { id: prev.length + 1, from, to, symbol },
+          ]);
+        };
+        addMove(fromSquare, toSquare, symbol);
         const target = board[row][col];
 
         if (target && target.color === piece?.color) {
@@ -496,7 +536,7 @@ const Chess: React.FC = () => {
           setAlertMessage("Check!");
           // setTimeout(() => setAlertMessage(null), 3000);
 
-          alert("Check!");
+          // alert("Check!");
         }
         // setAlertMessage(null);
         setBoard(newboard);
@@ -523,6 +563,11 @@ const Chess: React.FC = () => {
         }
 
         let moves: [number, number][] = [];
+
+        // if(){
+
+        // }
+
         if (currentpiece.type === piecetyp.PAWN)
           moves = getPawnMoves(row, col, board);
         if (currentpiece.type === piecetyp.ELEPHANT)
@@ -535,6 +580,9 @@ const Chess: React.FC = () => {
           moves = getMoves(row, col, board);
         if (currentpiece.type === piecetyp.KING)
           moves = getMoves(row, col, board);
+
+        const movess = getLegalMoves(row, col, board, currentpiece.color);
+        setHighlightedMoves(movess);
 
         setHighlightedMoves(moves);
       }
@@ -607,6 +655,19 @@ const Chess: React.FC = () => {
     return () => clearInterval(timer); // cleanup
   }, [timeLeft]);
 
+  useEffect(() => {
+    const whiteKing = findKingPosition(board, PieceColor.WHITE);
+    const blackKing = findKingPosition(board, PieceColor.BLACK);
+
+    if (whiteKing && isInCheck(board, PieceColor.WHITE)) {
+      setCheckedKing(whiteKing);
+    } else if (blackKing && isInCheck(board, PieceColor.BLACK)) {
+      setCheckedKing(blackKing);
+    } else {
+      setCheckedKing(null);
+    }
+  }, [board]);
+
   return (
     <div className="flex flex-row  absolute top-0 w-full h-full">
       <div className="inline-block p-2   m-auto my-15 ">
@@ -647,7 +708,15 @@ const Chess: React.FC = () => {
                         ? "border-4 border-red-600 cursor-pointer"
                         : ""
                     }
-                     ${!isClickable ? "cursor-not-allowed" : "cursor-pointer"}`}
+                     ${!isClickable ? "cursor-not-allowed" : "cursor-pointer"}
+                     
+                     ${
+                       checkedKing &&
+                       checkedKing[0] === rowIndex &&
+                       checkedKing[1] === colindex
+                         ? "animate-pulse bg-red-500"
+                         : ""
+                     }`}
                   >
                     <span>{getPieceSymbol(col)}</span>
 
