@@ -172,7 +172,6 @@ interface ChoicePopUpScreen {
 const Chess: React.FC = () => {
   const [board, setBoard] = useState(initialBoard);
   const [select, setSelect] = useState<[number, number] | null>(null);
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const [moves, setMoves] = useState<Move[]>([]);
   const [blackTurn, setBlackTurn] = useState(false);
@@ -181,7 +180,7 @@ const Chess: React.FC = () => {
     []
   );
   const [winner, setWinner] = useState<boolean>(false);
-  const [timeLeft, setTimeLeft] = useState<number>(30);
+  const [timeLeft, setTimeLeft] = useState<number >(30);
   const [showChoicePopup, setShowChoicePopup] = useState(false);
   const [promotionSquare, setPromotionSquare] = useState<{
     row: number;
@@ -216,23 +215,29 @@ const Chess: React.FC = () => {
   ): boolean => {
     const kingPos = findKingPosition(board, color);
     if (!kingPos) return false;
+
     const [kingRow, kingCol] = kingPos;
     const opponentColor =
       color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
+
+    for (let r = 0; r < colval2; r++) {
+      for (let c = 0; c < colval2; c++) {
         const piece = board[r][c];
-        if (piece && piece.color === opponentColor) {
-          const moves = getMoves(r, c, board);
-          const kingCheckPath = moves.some(
-            ([mr, mc]) => mr === kingRow && mc === kingCol
-          );
-          if (kingCheckPath) {
-            return true;
-          }
+        if (!piece || piece.color !== opponentColor) continue;
+
+        let moves: [number, number][] = [];
+
+        if (piece.type === piecetyp.PAWN) {
+          moves = getPawnMoves(r, c, board);
+        } else {
+          moves = getMoves(r, c, board);
+        }
+        if (moves.some(([mr, mc]) => mr === kingRow && mc === kingCol)) {
+          return true;
         }
       }
     }
+
     return false;
   };
 
@@ -246,7 +251,17 @@ const Chess: React.FC = () => {
         const piece = board[r][c];
         if (piece && piece.color === color) {
           const moves = getMoves(r, c, board);
+          const moveswithpawn = getPawnMoves(r, c, board);
+
           for (const [mr, mc] of moves) {
+            const newBoard = board.map((row) => row.slice());
+            newBoard[mr][mc] = piece;
+            newBoard[r][c] = null;
+            if (!isInCheck(newBoard, color)) {
+              return false;
+            }
+          }
+          for (const [mr, mc] of moveswithpawn) {
             const newBoard = board.map((row) => row.slice());
             newBoard[mr][mc] = piece;
             newBoard[r][c] = null;
@@ -302,7 +317,7 @@ const Chess: React.FC = () => {
 
     //black
     if (piece?.color === PieceColor.BLACK) {
-      if (row < colval2 && board[row + 1][col] === null) {
+      if (row < 7 && board[row + 1][col] === null) {
         moves.push([row + 1, col]);
         if (row === 1 && board[row + 2][col] === null) {
           moves.push([row + 2, col]);
@@ -310,8 +325,8 @@ const Chess: React.FC = () => {
       }
 
       if (
-        row < colval2 &&
-        col < colval2 &&
+        row < 7 &&
+        col < 7 &&
         board[row + 1][col + 1] &&
         board[row + 1][col + 1]?.color !== PieceColor.BLACK
       ) {
@@ -319,7 +334,7 @@ const Chess: React.FC = () => {
       }
 
       if (
-        row < colval2 &&
+        row < 7 &&
         col > 0 &&
         board[row + 1][col - 1] &&
         board[row + 1][col - 1]?.color !== PieceColor.BLACK
@@ -373,40 +388,37 @@ const Chess: React.FC = () => {
     return moves;
   };
 
-  // inside your Chess component (after getMoves and getPawnMoves)
+  const getLegalMoves = (
+    row: number,
+    col: number,
+    board: (Piecety | null)[][],
+    color: PieceColor
+  ): [number, number][] => {
+    const piece = board[row][col];
+    if (!piece || !piece.color || piece.color !== color) return [];
 
-const getLegalMoves = (
-  row: number,
-  col: number,
-  board: (Piecety | null)[][],
-  color: PieceColor
-): [number, number][] => {
-  const piece = board[row][col];
-  if (!piece || !piece.color || piece.color !== color) return [];
-
-  let possibleMoves: [number, number][] = [];
-  if (piece.type === piecetyp.PAWN) {
-    possibleMoves = getPawnMoves(row, col, board);
-  } else {
-    possibleMoves = getMoves(row, col, board);
-  }
-
-  const legalMoves: [number, number][] = [];
-
-  for (const [pr, pc] of possibleMoves) {
-    const newBoard = board.map((r) => [...r]);
-
-    newBoard[pr][pc] = piece;
-    newBoard[row][col] = null;
-
-    if (!isInCheck(newBoard, piece.color)) {
-      legalMoves.push([pr, pc]);
+    let possibleMoves: [number, number][] = [];
+    if (piece.type === piecetyp.PAWN) {
+      possibleMoves = getPawnMoves(row, col, board);
+    } else {
+      possibleMoves = getMoves(row, col, board);
     }
-  }
 
-  return legalMoves;
-};
+    const legalMoves: [number, number][] = [];
 
+    for (const [pr, pc] of possibleMoves) {
+      const newBoard = board.map((r) => [...r]);
+
+      newBoard[pr][pc] = piece;
+      newBoard[row][col] = null;
+
+      if (!isInCheck(newBoard, piece.color)) {
+        legalMoves.push([pr, pc]);
+      }
+    }
+
+    return legalMoves;
+  };
 
   const getSquare = (row: number, col: number): string => {
     return `${FILES[col]}${colval2 - row}`;
@@ -438,7 +450,8 @@ const getLegalMoves = (
       if (
         target &&
         target.type === piecetyp.KING &&
-        target.color !== piece?.color
+        target.color !== piece?.color &&
+        checkCheckmate(board, target.color)
       ) {
         const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
@@ -451,23 +464,28 @@ const getLegalMoves = (
         setHighlightedMoves([]);
         return;
       }
+if (piece?.type === piecetyp.PAWN && (row === 0 || row === 7)) {
+  const legalMoves = getLegalMoves(selRow, selCol, board, piece?.color);
+  if (legalMoves.some(([r, c]) => r === row && c === col)) {
+    if (target?.type === piecetyp.KING) {
+      setSelect(null);
+      setHighlightedMoves([]);
+      return;
+    }
 
-      if (
-        piece?.type === piecetyp.PAWN &&
-        (row === 7 || row === 0) &&
-        piece.color !== target?.color
-      ) {
-        const newboard = board.map((prev) => [...prev]);
-        newboard[row][col] = piece;
-        newboard[selRow][selCol] = null;
+    const newboard = board.map((prev) => [...prev]);
+    newboard[row][col] = piece;
+    newboard[selRow][selCol] = null;
 
-        setBoard(newboard);
-        setSelect(null);
-        setHighlightedMoves([]);
-        setPromotionSquare({ row, col });
-        setShowChoicePopup(true);
-        return;
-      }
+    setBoard(newboard);
+    setSelect(null);
+    setHighlightedMoves([]);
+    setPromotionSquare({ row, col });
+    setShowChoicePopup(true);
+   
+    return;
+  }
+}
 
       if (piece && piece.type === piecetyp.PAWN) {
         validMoves = getPawnMoves(selRow, selCol, board);
@@ -490,9 +508,11 @@ const getLegalMoves = (
       if (piece && piece.type === piecetyp.KING) {
         validMoves = getMoves(selRow, selCol, board);
       }
-      
-      validMoves = getLegalMoves(selRow, selCol, board, piece?.color);
-      
+
+      if (piece && piece.color) {
+        validMoves = getLegalMoves(selRow, selCol, board, piece.color);
+      }
+
       var isValidMove = validMoves.some(([r, c]) => r === row && c === col);
 
       if (isValidMove) {
@@ -524,21 +544,15 @@ const getLegalMoves = (
             : PieceColor.WHITE;
 
         if (checkCheckmate(newboard, opponentColor)) {
-          // setWinner(true);
-          console.log("comes in checkmate");
-          setAlertMessage("Checkmate!");
-          setTimeout(() => setAlertMessage(null), 3000);
+          setWinner(true);
+          return;
         } else if (
           isInCheck(newboard, opponentColor) &&
           piece?.type !== piecetyp.KING
         ) {
           console.log("comes in check");
-          setAlertMessage("Check!");
-          // setTimeout(() => setAlertMessage(null), 3000);
-
-          // alert("Check!");
         }
-        // setAlertMessage(null);
+
         setBoard(newboard);
         setSelect(null);
         setHighlightedMoves([]);
@@ -550,7 +564,6 @@ const getLegalMoves = (
         setHighlightedMoves([]);
       }
     } else {
-      setAlertMessage(null);
       const currentpiece = board[row][col];
       if (currentpiece !== null && !winner) {
         const isWhitePiece = currentpiece.color === PieceColor.WHITE;
@@ -563,10 +576,6 @@ const getLegalMoves = (
         }
 
         let moves: [number, number][] = [];
-
-        // if(){
-
-        // }
 
         if (currentpiece.type === piecetyp.PAWN)
           moves = getPawnMoves(row, col, board);
@@ -600,7 +609,6 @@ const getLegalMoves = (
       .length;
   };
 
-  // Handle promotion callback
   const handlePromotion = (pieceName: string, pieceSymbol: string) => {
     if (!promotionSquare) return;
     console.log("Promoted to:", pieceName, pieceSymbol);
@@ -629,6 +637,7 @@ const getLegalMoves = (
         type: pieceName as piecetyp,
         color: currentPiece.color,
       };
+      setTimeLeft(30);
 
       return newBoard;
     });
@@ -659,10 +668,10 @@ const getLegalMoves = (
     const whiteKing = findKingPosition(board, PieceColor.WHITE);
     const blackKing = findKingPosition(board, PieceColor.BLACK);
 
-    if (whiteKing && isInCheck(board, PieceColor.WHITE)) {
-      setCheckedKing(whiteKing);
-    } else if (blackKing && isInCheck(board, PieceColor.BLACK)) {
+    if (blackKing && isInCheck(board, PieceColor.BLACK)) {
       setCheckedKing(blackKing);
+    } else if (whiteKing && isInCheck(board, PieceColor.WHITE)) {
+      setCheckedKing(whiteKing);
     } else {
       setCheckedKing(null);
     }
@@ -764,12 +773,6 @@ const getLegalMoves = (
                     <h1 className="text-xl font-bold">{timeLeft}</h1>
                   </div>
                 </div>
-                {/* ⚠️ Red alert text */}
-                {alertMessage && (
-                  <p className="text-red-600 text-lg font-semibold mt-2 shadow-2xl">
-                    {alertMessage}
-                  </p>
-                )}
               </div>
             )
           ) : winner ? (
@@ -793,12 +796,6 @@ const getLegalMoves = (
                   <h1 className="text-xl font-bold">{timeLeft}</h1>
                 </div>
               </div>
-              {/* ⚠️ Red alert text */}
-              {alertMessage && (
-                <p className="text-red-600 text-lg font-semibold mt-2 shadow-2xl">
-                  {alertMessage}
-                </p>
-              )}
             </div>
           )}
         </div>
@@ -830,7 +827,7 @@ const getLegalMoves = (
         </div>
 
         <div className="relative">
-          {showChoicePopup && <ChoicePopUpScreen onSelect={handlePromotion} />}
+          {showChoicePopup && <ChoicePopUpScreen onSelect={handlePromotion} timeleft={timeLeft} settimeleft={setTimeLeft} />}
         </div>
       </div>
     </div>
