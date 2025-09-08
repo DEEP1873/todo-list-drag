@@ -7,6 +7,18 @@ enum piecetyp {
   KING = "King",
 }
 
+
+
+export enum PieceColor {
+  WHITE = "white",
+  BLACK = "black",
+}
+
+export interface Piecety {
+  type: piecetyp;
+  color: PieceColor;
+}
+
 export interface PromotionOption {
   name: string;
   symbol: string;
