@@ -3,8 +3,10 @@ import Confetti from "react-confetti";
 import MoveHistory from "./MoveHistory";
 import Timer from "./Timer";
 import ChoicePopUpScreen from "../PopUp/ChoicePopUpScreen";
+import { PieceColor } from "../../utils/chesspieces";
 
 interface SidebarProps {
+  winnerColor?: string | null;
   whiteTurn: boolean;
   winner: string | boolean;
   onRestart: () => void;
@@ -26,6 +28,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   handlePromotion,
   setTimeLeft,
   classname,
+  winnerColor,
+  
 }) => {
   return (
     <div className={`flex flex-col gap-1 max-h-80 md:max-h-201 md:gap-4 md:w-[37%] lg:h-full  rounded-2xl mx-auto ${classname}`}> 
@@ -35,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="text-black font-bold flex flex-col items-center gap-3">
             <Confetti />
             <p className="text-3xl">
-              🎉 {winner === "white" ? "White Wins" : "Black Wins"} 🎉
+              🎉 {winnerColor  === PieceColor.WHITE ? "White Wins" : "Black Wins"} 🎉
             </p>
             <button
               onClick={onRestart}

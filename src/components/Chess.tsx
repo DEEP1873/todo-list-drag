@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import piecetyp from "../config/chesspieces";
+import piecetyp from "../utils/chesspieces";
 
-import { PieceColor, type Piecety } from "../config/chesspieces";
-import { initialBoard, getPieceSymbol } from "../config/boardsetup";
+import { PieceColor, type Piecety } from "../utils/chesspieces";
+import { initialBoard, getPieceSymbol } from "../utils/boardsetup";
 import {
   type Move,
   getLegalMoves,
   getMoves,
   getPawnMoves,
-} from "../config/moves";
-import { isInCheck, checkCheckmate, findKingPosition } from "../config/rules";
+} from "../utils/moves";
+import { isInCheck, isCheckmate, findKingPosition } from "../utils/rules";
 import Board from "./Boards/Board";
 import Sidebar from "./SideBars/Sidebar";
 import MoveHistory from "./SideBars/MoveHistory";
@@ -24,7 +24,7 @@ const Chess: React.FC = () => {
   const [highlightedMoves, setHighlightedMoves] = useState<[number, number][]>(
     []
   );
-  const [winner, setWinner] = useState<boolean>(false);
+  const [winner, setWinner] = useState<boolean|string>(false);
   const [timeLeft, setTimeLeft] = useState<number>(30);
   const [showChoicePopup, setShowChoicePopup] = useState(false);
   const [promotionSquare, setPromotionSquare] = useState<{
@@ -32,6 +32,8 @@ const Chess: React.FC = () => {
     col: number;
   } | null>(null);
   const [checkedKing, setCheckedKing] = useState<[number, number] | null>(null);
+
+  const [winnerColor, setWinnerColor] = useState<PieceColor | null>(null);
 
   const FILES = Array.from({ length: 8 }, (_, i) =>
     String.fromCharCode(65 + i)
@@ -58,6 +60,18 @@ const Chess: React.FC = () => {
 
   const handleclick = (row: number, col: number) => {
     if (select) {
+
+      if(whiteTurn && board[select[0]][select[1]]?.color===PieceColor.BLACK){
+        setSelect(null);
+        setHighlightedMoves([]);
+        return;
+      }
+      if(blackTurn && board[select[0]][select[1]]?.color===PieceColor.WHITE){
+        setSelect(null);
+        setHighlightedMoves([]);
+        return;
+      }
+
       const [selRow, selCol] = select;
       const piece = board[selRow][selCol];
       // const isWhite =  PieceColor.WHITE;
@@ -69,8 +83,7 @@ const Chess: React.FC = () => {
       if (
         target &&
         target.type === piecetyp.KING &&
-        target.color !== piece?.color &&
-        checkCheckmate(board, target.color)
+        target.color !== piece?.color
       ) {
         const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
@@ -131,12 +144,13 @@ const Chess: React.FC = () => {
       if (piece && piece.color) {
         validMoves = getLegalMoves(selRow, selCol, board, piece.color);
       }
-
+    
       var isValidMove = validMoves.some(([r, c]) => r === row && c === col);
 
       if (isValidMove) {
         const fromSquare = getSquare(selRow, selCol);
         const toSquare = getSquare(row, col);
+
 
         const addMove = (from: string, to: string, symbol: string) => {
           setMoves((prev) => [
@@ -145,13 +159,17 @@ const Chess: React.FC = () => {
           ]);
         };
         addMove(fromSquare, toSquare, symbol);
-        const target = board[row][col];
 
+
+
+        const target = board[row][col];
         if (target && target.color === piece?.color) {
           setSelect(null);
           setHighlightedMoves([]);
           return; // stop here
         }
+
+        
         const newboard = board.map((prev) => [...prev]);
         newboard[row][col] = piece;
         newboard[selRow][selCol] = null;
@@ -162,8 +180,15 @@ const Chess: React.FC = () => {
             ? PieceColor.BLACK
             : PieceColor.WHITE;
 
-        if (checkCheckmate(newboard, opponentColor)) {
+        // const currentpiececolor = piece?.color===PieceColor.WHITE?PieceColor.WHITE:PieceColor.BLACK;    
+        const result = isCheckmate(newboard, opponentColor);
+        if ( result.checkmate ) {
+          setBoard(newboard);
+          setSelect(null);
+          setHighlightedMoves([]);
           setWinner(true);
+          setWinnerColor(result.winner);
+          console.log("Winner from result:", result.winner);
           return;
         } else if (
           isInCheck(newboard, opponentColor) &&
@@ -171,7 +196,7 @@ const Chess: React.FC = () => {
         ) {
           console.log("comes in check");
         }
-
+    
         setBoard(newboard);
         setSelect(null);
         setHighlightedMoves([]);
@@ -193,6 +218,7 @@ const Chess: React.FC = () => {
         } else {
           return;
         }
+        
 
         let moves: [number, number][] = [];
 
@@ -212,7 +238,7 @@ const Chess: React.FC = () => {
         const movess = getLegalMoves(row, col, board, currentpiece.color);
         setHighlightedMoves(movess);
 
-        setHighlightedMoves(moves);
+        // setHighlightedMoves(moves);
       }
     }
   };
@@ -307,6 +333,7 @@ const Chess: React.FC = () => {
         handlePromotion={handlePromotion}
         setTimeLeft={setTimeLeft}
         classname="block lg:hidden "
+        winnerColor={winnerColor}
       />
       <Board
         board={board}
@@ -328,6 +355,7 @@ const Chess: React.FC = () => {
         handlePromotion={handlePromotion}
         setTimeLeft={setTimeLeft}
         classname="hidden lg:block  "
+        winnerColor={winnerColor}
       />
 
       <MoveHistory moves={moves} classname="block lg:hidden "/>

@@ -1,5 +1,5 @@
 import piecetyp, { PieceColor, type Piecety } from "./chesspieces";
-import { isInCheck } from "./rules";
+import { isInCheck } from "../utils/rules";
 
 export type Move = {
   id: number;
@@ -97,9 +97,15 @@ export const getPawnMoves = (
 
     //diagonal moves
 
+    console.log(
+      row > 0 ,
+      col > 0 ,
+      board[row - 1][col - 1]?.color);
+    
+    
     if (
       row > 0 &&
-      col >= 0 &&
+      col > 0 &&
       board[row - 1][col - 1] &&
       board[row - 1][col - 1]?.color !== PieceColor.WHITE
     ) {
@@ -108,7 +114,7 @@ export const getPawnMoves = (
 
     if (
       row > 0 &&
-      col <= colval2 &&
+      col <= colval2-1  &&
       board[row - 1][col + 1] &&
       board[row - 1][col + 1]?.color !== PieceColor.WHITE
     ) {
@@ -127,7 +133,7 @@ export const getPawnMoves = (
 
     if (
       row < 7 &&
-      col < 7 &&
+      col <= colval2-1 &&
       board[row + 1][col + 1] &&
       board[row + 1][col + 1]?.color !== PieceColor.BLACK
     ) {
@@ -188,6 +194,11 @@ export const getMoves = (
   }
   return moves;
 };
+const cloneBoard = (board: (Piecety | null)[][]): (Piecety | null)[][] => {
+  return board.map(row =>
+    row.map(cell => (cell ? { ...cell } : null))
+  );
+};
 
 export const getLegalMoves = (
   row: number,
@@ -208,9 +219,9 @@ export const getLegalMoves = (
   const legalMoves: [number, number][] = [];
 
   for (const [pr, pc] of possibleMoves) {
-    const newBoard = board.map((r) => [...r]);
+    const newBoard = cloneBoard(board);  // ✅ deep copy
 
-    newBoard[pr][pc] = piece;
+    newBoard[pr][pc] = { ...piece };     // ✅ copy piece, not ref
     newBoard[row][col] = null;
 
     if (!isInCheck(newBoard, piece.color)) {
@@ -220,3 +231,4 @@ export const getLegalMoves = (
 
   return legalMoves;
 };
+

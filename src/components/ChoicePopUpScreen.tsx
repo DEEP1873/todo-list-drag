@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import piecetyp from "../config/chesspieces";
-import type { PromotionOption } from "../config/chesspieces";
+import piecetyp from "../utils/chesspieces";
+import type { PromotionOption } from "../utils/chesspieces";
 
 interface ChoicePopUpScreenProps {
   onSelect: (pieceName: string, pieceSymbol: string) => void;
